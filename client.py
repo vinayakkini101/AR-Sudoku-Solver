@@ -101,7 +101,26 @@ while(True):
         warpedFrame = cv2.warpPerspective(thresFrame ,matrix,(maxWidth, maxHeight),flags=cv2.INTER_LINEAR)
         cv2.imshow('warped perspective', warpedFrame)
 
-        
+        # Get each of the 81 grid cells
+        n_rows = 9
+        n_images_per_row = 9
+        height = maxHeight
+        width = maxWidth
+ 
+        roi_height = int(height / n_rows)
+        roi_width = int(width / n_images_per_row)
+
+        gridCells = []
+
+        for x in range(0, n_rows):
+            for y in range(0,n_images_per_row):
+                tmp_image=warpedFrame[x*roi_height:(x+1)*roi_height, y*roi_width:(y+1)*roi_width]
+                gridCells.append(tmp_image)
+
+        # for x in range(0, n_rows):
+        #     for y in range(0, n_images_per_row):
+                # cv2.imshow(str(x*n_images_per_row+y+1)+".jpg" , images[x*n_images_per_row+y])
+                # cv2.moveWindow(str(x*n_images_per_row+y+1), 100+(y*roi_width), 50+(x*roi_height))
 
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
