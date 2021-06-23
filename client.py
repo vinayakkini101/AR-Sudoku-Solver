@@ -3,20 +3,8 @@ from imutils import contours
 import numpy as np
 # from VideoStreamWidget import VideoStreamWidget
 
-
 stream_link='http://192.168.0.103:8080/video'
 cap = cv2.VideoCapture(stream_link)
-
-# def nothing(x):
-#         pass
-
-# cv2.namedWindow('slider')
-# cv2.createTrackbar('blocksize', 'slider', 3, 19, nothing)
-# cv2.createTrackbar('C', 'slider', 0, 20, nothing)
-
-# trackbarBlocksize = cv2.getTrackbarPos('blocksize', 'slider')
-# trackbarC = cv2.getTrackbarPos('C', 'slider')
-
 
 while(True):
     ret, frame = cap.read()
@@ -40,13 +28,8 @@ while(True):
 
     inverted = cv2.bitwise_not(thresFrame)
     cv2.imshow('inverted', inverted)
-
-    # kernel = np.ones((0,1),np.uint8)
-    # openedFrame = cv2.morphologyEx(thresFrame, cv2.MORPH_DILATE, kernel)
-    # openedFrame = cv2.morphologyEx(thresFrame, cv2.MORPH_ERODE, kernel)
-    # openedFrame = cv2.dilate(thresFrame, kernel, iterations=1)
-    # cv2.imshow('dl',openedFrame)
     
+    # Choosing the contour with the maximum area
     cnts = cv2.findContours(inverted, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if len(cnts) == 2 else cnts[1]
     maxAreaContour = [[]]
@@ -65,10 +48,12 @@ while(True):
     cv2.drawContours(originalFrame, [maxAreaContour], -1, (0, 255, 255), 2)
     cv2.imshow('max area contour', originalFrame)
 
+    # Getting the polygon (square in this case) for the max contour
     epsilon = 0.01*cv2.arcLength(maxAreaContour, True)
     approxRect = cv2.approxPolyDP(maxAreaContour, epsilon, True)
     cv2.drawContours(originalFrame, [approxRect], 0, (0), 3)
 
+    # Proceeding only if the polygon is of length 4 i.e square/rectangle
     x,y = approxRect[0][0]
     if len(approxRect) == 4:
     #     cv2.putText(originalFrame, "Readjust camera", (x, y), cv2.FONT_HERSHEY_COMPLEX, 1, 0,2)
@@ -77,12 +62,13 @@ while(True):
         cv2.putText(originalFrame, "Rectangle", (x, y), cv2.FONT_HERSHEY_COMPLEX, 1, 0,2)
         cv2.imshow('polygon', originalFrame)
 
+        # Getting the corners of the square
         pt_A = approxRect[0][0]
         pt_B = approxRect[1][0]
         pt_C = approxRect[2][0]
         pt_D = approxRect[3][0]
 
-        # print(pt_A[0])
+        # Getting the sides of the square
         width_AD = np.sqrt(((pt_A[0] - pt_D[0]) ** 2) + ((pt_A[1] - pt_D[1]) ** 2))
         width_BC = np.sqrt(((pt_B[0] - pt_C[0]) ** 2) + ((pt_B[1] - pt_C[1]) ** 2))
         maxWidth = max(int(width_AD), int(width_BC))
@@ -107,40 +93,39 @@ while(True):
         height = maxHeight
         width = maxWidth
  
+        # Getting the height, width of the Region Of Interest i.e each cell 
         roi_height = int(height / n_rows)
         roi_width = int(width / n_images_per_row)
 
         gridCells = []
 
+        # Storing each of the 81 cells in the gridCells array
         for x in range(0, n_rows):
             for y in range(0,n_images_per_row):
                 tmp_image=warpedFrame[x*roi_height:(x+1)*roi_height, y*roi_width:(y+1)*roi_width]
                 gridCells.append(tmp_image)
-
-        # for x in range(0, n_rows):
-        #     for y in range(0, n_images_per_row):
-                # cv2.imshow(str(x*n_images_per_row+y+1)+".jpg" , images[x*n_images_per_row+y])
-                # cv2.moveWindow(str(x*n_images_per_row+y+1), 100+(y*roi_width), 50+(x*roi_height))
-
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             cv2.destroyAllWindows()
             break
 
 
-    # def order_points(pts):
-    #     # Order along X axis
-    #     Xorder = pts[np.argsort(pts[:, 0]), :]
 
-    #     left = Xorder[:2, :]
-    #     right = Xorder[2:, :]
 
-    #     # Order along Y axis
-    #     left = left[np.argsort(left[:, 1]), :]
-    #     (tl, bl) = left
+# Displaying trackbars to adjust values for thresholding
+# def nothing(x):
+#         pass
 
-    #     # use distance to get bottom right
-    #     D = dist.cdist(tl[np.newaxis], right, "euclidean")[0]
-    #     (br, tr) = right[np.argsort(D)[::-1], :]
+# cv2.namedWindow('slider')
+# cv2.createTrackbar('blocksize', 'slider', 3, 19, nothing)
+# cv2.createTrackbar('C', 'slider', 0, 20, nothing)
 
-    #     return np.array([tl, tr, br, bl]) 
+# trackbarBlocksize = cv2.getTrackbarPos('blocksize', 'slider')
+# trackbarC = cv2.getTrackbarPos('C', 'slider')
+
+
+# def displayEachCell(n_rows, n_images_per_row):
+#     for x in range(0, n_rows):
+#         for y in range(0, n_images_per_row):
+#             cv2.imshow(str(x*n_images_per_row+y+1)+".jpg" , images[x*n_images_per_row+y])
+#             cv2.moveWindow(str(x*n_images_per_row+y+1), 100+(y*roi_width), 50+(x*roi_height))

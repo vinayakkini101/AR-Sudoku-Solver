@@ -1,6 +1,7 @@
 /.venv
 /__pycache__
 VideoStreamWidget.py
+/DigitSamples
 
 # Compiled class file
 *.class
